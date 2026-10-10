@@ -1821,44 +1821,25 @@ TEMPLE_PROFILES={
  "durga":{"name":"Maa Durga Temple","short":"Maa Durga","greeting":"Jai Mata Di!","mantra":"ॐ दुं दुर्गायै नमः॥","emoji":"🌺"},
  "shiva":{"name":"Mahadev Shiva Temple","short":"Mahadev Shiva","greeting":"Har Har Mahadev!","mantra":"ॐ नमः शिवाय॥","emoji":"🔱"},
 }
-DURGA_PUJA_SCHEDULE=[
- ("05:15","05:30","🪔 Mangal Aarti • Darshan","aarti"),
- ("06:00","06:30","📿 Japa • Darshan","japa"),
- ("06:45","07:00","🌺 Shringaar Aarti • Darshan","aarti"),
- ("08:30","10:00","🌺 Chadhawa • Darshan","chadhawa"),
- ("10:15","10:30","🪔 Morning Aarti • Darshan","aarti"),
- ("11:20","12:15","🍚 Bhog Seva • Darshan","bhog"),
- ("12:30","12:45","🪔 Bhog Aarti","aarti"),
- ("14:45","16:45","📿 Mid Day Japa","japa"),
- ("17:00","17:15","🌺 Afternoon Shringaar Aarti • Darshan","aarti"),
- ("18:05","19:00","🌺 Chadhawa • Darshan","chadhawa"),
- ("19:15","19:30","🪔 Evening Aarti • Darshan","aarti"),
- ("20:15","21:00","🍚 Bhog Seva • Darshan","bhog"),
- ("21:15","21:30","🌙 Shital Aarti • Darshan","aarti"),
- ("21:45","22:00","📿 Night Japa • Darshan","japa"),
- ("22:15","22:30","🌙 Sayan Aarti • Darshan","aarti"),
+PUJA_SCHEDULE=[
+ # User-approved revised daily schedule. All times are India Standard Time.
+ ("05:00","05:30","🪔 Mangal Aarti • Darshan","aarti"),
+ ("05:30","06:30","📿 Japa • Darshan","japa"),
+ ("06:30","07:00","🌺 Shringaar Aarti • Darshan","aarti"),
+ ("07:00","10:00","🌺 Chadhawa • Darshan","chadhawa"),
+ ("10:00","10:30","🪔 Morning Aarti • Darshan","aarti"),
+ ("10:30","12:15","🍚 Bhog Seva • Darshan","bhog"),
+ ("12:15","12:45","🪔 Bhog Aarti","aarti"),
+ ("12:45","16:45","📿 Mid Day Japa","japa"),
+ ("16:45","17:15","🌺 Afternoon Shringaar Aarti • Darshan","aarti"),
+ ("17:15","19:00","🌺 Chadhawa • Darshan","chadhawa"),
+ ("19:00","19:30","🪔 Evening Aarti • Darshan","aarti"),
+ ("19:30","21:00","🍚 Bhog Seva • Darshan","bhog"),
+ ("21:00","21:30","🌙 Shital Aarti • Darshan","aarti"),
+ ("21:30","22:00","📿 Night Japa • Darshan","japa"),
+ ("22:00","22:30","🌙 Sayan Aarti • Darshan","aarti"),
+ ("22:30","22:45","🔒 Mandir Closing Preparation","closing"),
 ]
-SHIVA_PUJA_SCHEDULE=[
- ("05:00","05:15","🪔 Mangal Aarti • Darshan","aarti"),
- ("05:30","06:00","📿 Japa • Darshan","japa"),
- ("06:30","06:45","🌺 Shringaar Aarti • Darshan","aarti"),
- ("07:00","08:30","🌺 Chadhawa • Darshan","chadhawa"),
- ("10:00","10:15","🪔 Morning Aarti • Darshan","aarti"),
- ("10:30","11:20","🍚 Bhog Seva • Darshan","bhog"),
- ("12:15","12:30","🪔 Bhog Aarti","aarti"),
- ("12:45","14:45","📿 Mid Day Japa","japa"),
- ("16:45","17:00","🌺 Afternoon Shringaar Aarti • Darshan","aarti"),
- ("17:15","18:05","🌺 Chadhawa • Darshan","chadhawa"),
- ("19:00","19:15","🪔 Evening Aarti • Darshan","aarti"),
- ("19:30","20:15","🍚 Bhog Seva • Darshan","bhog"),
- ("21:00","21:15","🌙 Shital Aarti • Darshan","aarti"),
- ("21:30","21:45","📿 Night Japa • Darshan","japa"),
- ("22:00","22:15","🌙 Sayan Aarti • Darshan","aarti"),
-]
-# Backward-compatible alias for any legacy sections; active schedule is selected per temple.
-def temple_schedule():
-    return SHIVA_PUJA_SCHEDULE if is_shiva() else DURGA_PUJA_SCHEDULE
-PUJA_SCHEDULE = DURGA_PUJA_SCHEDULE
 SHIVA_CHADHAWA_OPTIONS=[
  ("Belpatra","Belpatra leaves","🍃"),("Bilwa Fruit","Whole Bilwa/Bael fruit","🍈"),("Dhatura","Dhatura offering","🌿"),("Akanda","Akanda flowers","🌼"),
  ("White Flowers","White flowers","🌸"),("Bilwa Mala","Bilwa leaf mala","🌿"),("Rudraksha Mala","Rudraksha Mala","📿"),("Rudraksha","Rudraksha beads","📿"),("Bhasma","Sacred Bhasma","⚪"),
@@ -1879,18 +1860,11 @@ def active_temple(): return TEMPLE_PROFILES.get(st.session_state.get("active_tem
 def is_shiva(): return st.session_state.get("active_temple","durga")=="shiva"
 def current_puja_task():
     now=india_now().time()
-    schedule=temple_schedule()
-    opening="05:00" if is_shiva() else "05:15"
-    oh,om=map(int,opening.split(':'))
-    open_at=now.replace(hour=oh,minute=om,second=0,microsecond=0)
-    close_at=now.replace(hour=22,minute=45,second=0,microsecond=0)
-    if now < open_at or now >= close_at:
-        return (f"🌙 Temple closed until {opening} AM","closed","22:45",opening) if now < open_at else ("🌙 Temple closed for the day","closed","22:45",opening)
-    for a,b,label,kind in schedule:
+    for a,b,label,kind in PUJA_SCHEDULE:
         ah,am=map(int,a.split(':')); bh,bm=map(int,b.split(':'))
         aa=now.replace(hour=ah,minute=am,second=0,microsecond=0); bb=now.replace(hour=bh,minute=bm,second=0,microsecond=0)
         if aa<=now<bb: return label,kind,a,b
-    return ("🙏 Open Darshan • Between scheduled Sevas","darshan",""," ")
+    return ("🌙 Temple closed until 05:00 AM","closed","22:45","05:00") if now.hour<5 else ("🌙 Temple closed for the day","closed","22:45","05:00")
 
 def task_gate(required_kind):
     label,kind,a,b=current_puja_task()
@@ -1956,7 +1930,7 @@ def calendar_page():
     current_label, current_kind, ca, cb = current_puja_task()
     st.info(f"🕐 Current: **{current_label}** • {ca}–{cb} IST")
     cols=st.columns(2)
-    for i,(a,b,label,kind) in enumerate(temple_schedule()):
+    for i,(a,b,label,kind) in enumerate(PUJA_SCHEDULE):
         with cols[i%2]:
             st.markdown(f"<div class='schedule-chip'><b>{a}–{b} IST</b><span>{label}</span><small>Task: {kind.title()}</small></div>", unsafe_allow_html=True)
     st.divider()
@@ -1970,7 +1944,7 @@ def reminders_page():
     t=active_temple()
     st.info(f"🙏 Reminders are for **{t['name']}**. Times are IST and follow the Mandir schedule.")
     st.markdown("### 🕯️ Puja reminders")
-    for a,b,label,kind in temple_schedule():
+    for a,b,label,kind in PUJA_SCHEDULE:
         st.markdown(f"<div class='card' style='margin-bottom:8px;padding:12px'><b>{label}</b><br><span class='small-muted'>{a}–{b} IST • {kind.title()}</span></div>", unsafe_allow_html=True)
     st.markdown("### 🔔 Browser reminder preference")
     enabled=st.checkbox("Enable browser reminder preference", value=st.session_state.get('notifications',False), key='g143143_notify_toggle')
@@ -1985,13 +1959,13 @@ def puja_page():
     temple_switcher()
     t=active_temple()
     current_label,kind,a,b=current_puja_task()
-    st.markdown(f"<div class='section-title'><h2>🛕 {t['name']} Puja</h2><span>Temple-specific schedule • {t['mantra']}</span></div>", unsafe_allow_html=True)
+    st.markdown(f"<div class='section-title'><h2>🛕 {t['name']} Puja</h2><span>Strict schedule • {t['mantra']}</span></div>", unsafe_allow_html=True)
     st.markdown(f"<div class='card' style='text-align:center'><div style='font-size:42px'>{t['emoji']}</div><h3>{current_label}</h3><p class='small-muted'>{a}–{b} IST • Current task type: {kind.title()}</p></div>", unsafe_allow_html=True)
     st.markdown("### ⏰ Mandir Timetable")
-    for a,b,label,kind in temple_schedule():
+    for a,b,label,kind in PUJA_SCHEDULE:
         st.markdown(f"<div class='schedule-chip'><b>{a}–{b} IST</b><span>{label}</span><small>{'NOW' if label==current_label else kind.title()}</small></div>", unsafe_allow_html=True)
     st.markdown("### 🙏 Follow the current task")
-    st.write("Aarti, Bhog, Chadhawa and Japa follow this temple’s own scheduled times. Darshan of both Maa Durga and Mahadev Shiva is available throughout that temple’s opening hours, including during Japa, Chadhawa, Bhog Seva and the gaps between scheduled activities. Both temples’ Akhand Diyas remain virtually lit at all times.")
+    st.write("Aarti, Bhog, Chadhawa and Japa follow their scheduled times. Darshan of both Maa Durga and Mahadev Shiva is available throughout temple opening hours, including during all scheduled activities.")
 
 
 def sankalp_page():
@@ -2009,16 +1983,16 @@ def prasad_page():
 def diya_page():
     top_header(); temple_switcher()
     t=active_temple()
-    st.markdown(f"<div class='section-title'><h2>🪔 Akhand Diya Seva</h2><span>{t['name']} • Always-lighted sacred lamp</span></div>", unsafe_allow_html=True)
-    st.markdown("<div class='card' style='text-align:center;border:1px solid #e4c67c'><div style='font-size:72px;filter:drop-shadow(0 0 12px #ffb52e)'>🪔</div><h3>Akhand Diya — ALWAYS LIGHTED</h3><p class='small-muted'>The virtual sacred flame remains lit day and night. Devotees can care for the lamp every day at any time while the temple is open.</p><div style='font-size:13px;color:#a36a18;font-weight:800'>🔥 FLAME STATUS: LIT • 24×7</div></div>", unsafe_allow_html=True)
-    st.caption("Choose this temple above to care for its own Akhand Diya. The lamp is shown as continuously lit; daily care is recorded as a virtual devotional action.")
-    if st.button("🪔 Care for Today's Akhand Diya", type='primary', use_container_width=True, key='g143143_offer_diya'):
-        ok,cb=seva(f"{t['name']} Akhand Diya Daily Care",51,12)
-        if ok:
-            bump_stat('diyas')
-            event_log('akhand_diya_care',{'temple':st.session_state.get('active_temple','durga'),'date':india_now().date().isoformat(),'status':'lit'})
-            st.success(f"🪔 Today's Akhand Diya care recorded for {t['name']}. The virtual flame remains lit. {t['greeting']}")
-            st.rerun()
+    st.markdown(f"<div class='section-title'><h2>🪔 Diya Seva</h2><span>{t['name']} • scheduled Chadhawa / Seva</span></div>", unsafe_allow_html=True)
+    st.markdown("<div class='card' style='text-align:center'><div style='font-size:64px'>🪔</div><h3>Offer a virtual Diya</h3><p class='small-muted'>Diya Seva follows the active Chadhawa / Seva window.</p></div>", unsafe_allow_html=True)
+    if st.button("🪔 Offer Diya Seva", type='primary', use_container_width=True, key='g143143_offer_diya'):
+        if task_gate('chadhawa'):
+            ok,cb=seva(f"{t['name']} Diya Seva",51,12)
+            if ok:
+                bump_stat('diyas')
+                event_log('diya',{'temple':st.session_state.get('active_temple','durga')})
+                st.success(f"🪔 Diya offered to {t['name']}. {t['greeting']}")
+                st.rerun()
 
 
 def donation_seva():
@@ -2439,7 +2413,7 @@ def home():
     st.markdown("<div class='section-title'><h2>⏰ Today's Puja Schedule</h2><span>Every devotional task is enforced in real time using IST</span></div>",unsafe_allow_html=True)
     for start in (0,5):
         cols=st.columns(5)
-        for idx,(ss,ee,ll,kk) in enumerate(temple_schedule()[start:start+5]):
+        for idx,(ss,ee,ll,kk) in enumerate(PUJA_SCHEDULE[start:start+5]):
             with cols[idx]: st.markdown(f"<div class='schedule-chip'><b>{ss}–{ee}</b><span>{ll}</span><small>{kk.title()} only</small></div>",unsafe_allow_html=True)
     st.markdown("<div class='section-title'><h2>🎉 Upcoming Festivals</h2><span>Completed dates automatically disappear and the next festival moves forward</span></div>",unsafe_allow_html=True)
     st.markdown("### 🕉️ Today's Durgapur Panchang")
